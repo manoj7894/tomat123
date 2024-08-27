@@ -8,7 +8,6 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
-        CURRENT_IMAGE_ID = 'manoj3003/pipelie-cicd:${BUILD_NUMBER}'
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
         DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
