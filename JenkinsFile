@@ -26,22 +26,6 @@ pipeline {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
-
-        stage('Verify and Clean Up Docker Images') {
-            steps {
-                script {
-                    // List files to ensure the script is in the expected location
-                    sh 'ls -l'
-                    
-                    // Adjust the path to where the script is located
-                    sh 'chmod +x scripts/cleanup_docker_images.sh'
-                    sh 'ls -l scripts/cleanup_docker_images.sh'
-                    
-                    // Run the script from its correct location
-                    sh './scripts/cleanup_docker_images.sh'
-                }
-            }
-        }
         
         stage('Login') {
             steps {
