@@ -106,8 +106,7 @@ pipeline {
                 to: 'manojvarmapotthutri@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
-                mimeType: 'text/html',
-                cc: 'varmapotthuri4@gmail.com'
+                mimeType: 'text/html'
             )
         }
     }
