@@ -4,26 +4,43 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
+        OLD_IMAGE_TAG_PATTERN = "manoj3003/pipelie-cicd:*"  // Pattern to match old images
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
         DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
     }
+
     stages {
-        stage('Cleanup Job1 Image') {
+        stage('Cleanup Old Docker Images') {
             steps {
                 script {
-                    // Check if the image exists before trying to delete it
-                    def imageExists = sh(script: "docker images -q ${DOCKER_IMAGE}", returnStdout: true).trim()
+                    echo "Cleaning up old Docker images..."
                     
-                    if (imageExists) {
-                        echo "Removing old image ${JOB1_IMAGE}"
-                        sh "docker rmi -f ${JOB1_IMAGE} || echo 'Failed to remove image ${DOCKER_IMAGE} - might be in use or other error.'"
+                    // Get the list of old images matching the pattern
+                    def oldImages = sh(script: "docker images --format '{{.Repository}}:{{.Tag}}' | grep '${OLD_IMAGE_TAG_PATTERN}'", returnStdout: true).trim()
+                    
+                    if (oldImages) {
+                        oldImages.split('\n').each { image ->
+                            if (image != DOCKER_IMAGE) {
+                                echo "Attempting to remove old image ${image}"
+                                sh """
+                                    # Check if the image exists before trying to delete it
+                                    if docker images -q ${image} > /dev/null 2>&1; then
+                                        # Try to remove the image
+                                        docker rmi -f ${image} || echo 'Failed to remove image ${image} - might be in use or other error.'
+                                    else
+                                        echo 'Image ${image} does not exist.'
+                                    fi
+                                """
+                            }
+                        }
                     } else {
-                        echo "Image ${DOCKER_IMAGE} does not exist."
+                        echo "No old images found matching pattern ${OLD_IMAGE_TAG_PATTERN}"
                     }
                 }
             }
         }
+
         stage('GetCode') {
             steps {
                 git branch: 'master', url: 'https://github.com/manoj7894/tomat123.git'
@@ -66,6 +83,7 @@ pipeline {
                 }
             }
         }
+
         stage('Update Deployment File') {
             steps {
                 withCredentials([string(credentialsId: 'github_id', variable: 'GITHUB_TOKEN')]) {
