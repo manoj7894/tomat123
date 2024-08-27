@@ -92,4 +92,11 @@ pipeline {
             }
         }
     }
+    post {
+            always{
+                mail to: "manojvarmapotthutri@gmail.com",
+                subject: "job Email",
+                body: "build"
+        }
+    }
 }
