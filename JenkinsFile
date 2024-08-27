@@ -30,13 +30,15 @@ pipeline {
         stage('Verify and Clean Up Docker Images') {
             steps {
                 script {
-                    // Verify the script’s location and permissions
+                    // List files to ensure the script is in the expected location
                     sh 'ls -l'
-                    sh 'chmod +x cleanup_docker_images.sh'
-                    sh 'ls -l cleanup_docker_images.sh'
                     
-                    // Pass the current image ID to the cleanup script
-                    sh "./cleanup_docker_images.sh ${env.CURRENT_IMAGE_ID}"
+                    // Adjust the path to where the script is located
+                    sh 'chmod +x scripts/cleanup_docker_images.sh'
+                    sh 'ls -l scripts/cleanup_docker_images.sh'
+                    
+                    // Run the script from its correct location
+                    sh './scripts/cleanup_docker_images.sh'
                 }
             }
         }
