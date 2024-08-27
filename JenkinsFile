@@ -54,6 +54,31 @@ pipeline {
                 }
             }
         }
+        stage('Cleanup Old Docker Images') {
+            steps {
+                script {
+                    // Connect to EC2 and run cleanup commands
+                    sh '''
+                        # List all Docker images with their IDs and tags
+                        docker images -q > all_images.txt
+
+                        # Get the image ID of the current Docker image
+                        CURRENT_IMAGE_ID=$(docker images -q ${DOCKER_IMAGE})
+
+                        # Loop through all images and delete those that are not the current one
+                        while read -r IMAGE_ID; do
+                            if [ "$IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
+                                echo "Removing old image with ID: $IMAGE_ID"
+                                docker rmi -f $IMAGE_ID
+                            fi
+                        done < all_images.txt
+
+                        # Clean up the temporary file
+                        rm all_images.txt
+                    '''
+                }
+            }
+        }
 
         stage('Update Deployment File') {
             steps {
