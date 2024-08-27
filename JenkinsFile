@@ -55,6 +55,15 @@ pipeline {
             }
         }
 
+        stage('Clean Up Docker Images') {
+            steps {
+                script {
+                    // Run the cleanup script on your EC2 instance
+                    sh 'cleanup_docker_images.sh'
+                }
+            }
+        }
+
         stage('Update Deployment File') {
             steps {
                 withCredentials([string(credentialsId: 'github_id', variable: 'GITHUB_TOKEN')]) {
