@@ -52,6 +52,34 @@ pipeline {
                 }
             }
         }
+
+        stage('Cleanup Old Docker Images') {
+            steps {
+                script {
+                    sh '''
+                        # Get the image ID of the current Docker image
+                        CURRENT_IMAGE_ID=$(docker images -q ${DOCKER_IMAGE})
+
+                        # List all Docker image IDs
+                        docker images -q | while read -r IMAGE_ID; do
+                            if [ "$IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
+                                # List containers using the image
+                                CONTAINERS=$(docker ps -a -q --filter "ancestor=$IMAGE_ID")
+
+                                if [ -n "$CONTAINERS" ]; then
+                                    echo "Skipping removal of image $IMAGE_ID as it is being used by running containers."
+                                else
+                                    echo "Removing old image with ID: $IMAGE_ID"
+                                    # Try to remove the image
+                                    docker rmi -f $IMAGE_ID || echo "Failed to remove image $IMAGE_ID - might be in use or other error."
+                                fi
+                            fi
+                        done
+                    '''
+                }
+            }
+        }
+
         stage('Update Deployment File') {
             steps {
                 withCredentials([string(credentialsId: 'github_id', variable: 'GITHUB_TOKEN')]) {
