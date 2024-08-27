@@ -74,7 +74,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh '''
-                        mkdir -p /var/lib/jenkins/workspace/email-01/target/sonar
                         mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL
                     '''
                 }
