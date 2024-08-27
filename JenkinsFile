@@ -134,6 +134,7 @@ pipeline {
                            </body>
                         </html>''',
                 to: 'manojvarmapotthutri@gmail.com',
+                cc: 'varmapotthuri4@gmail.com',  // Add your CC recipient here
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html'
