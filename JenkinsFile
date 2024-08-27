@@ -1,0 +1,95 @@
+pipeline {
+    agent {
+    docker {
+      image 'abhishekf5/maven-abhishek-docker-agent:v1'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+    }
+  }
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('Docker_id')
+        DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
+        GIT_REPO_NAME = "tomat123"
+        GIT_USER_NAME = "manoj7894"
+        DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
+    }
+
+    stages {
+        stage('GetCode') {
+            steps {
+                git branch: 'master', url: 'https://github.com/manoj7894/tomat123.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+        
+        stage('Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Docker_id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                }
+            }
+        }
+        
+        stage('Static Code Analysis') {
+            environment {
+                SONAR_URL = "http://65.1.107.97:9000"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL'
+                }
+            }
+        }
+
+
+        stage('Push') {
+            steps {
+                script {
+                    def dockerImage = docker.image(DOCKER_IMAGE)
+                    dockerImage.push() // Pushes the Docker image to the repository
+                }
+            }
+        }
+
+        stage('Update Deployment File') {
+            steps {
+                withCredentials([string(credentialsId: 'github_id', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        // Configure Git
+                        sh '''
+                            git config user.email "manojvarmapotthuri3003@gmail.com"
+                            git config user.name "Manojvarma Potthuri"
+                        '''
+
+                        // Check out the repository
+                        sh 'git checkout master'
+
+                        // Display the current content of the deployment file for debugging
+                        sh 'cat ${DEPLOYMENT_FILE_PATH}'
+
+                        // Update the image tag in deployment.yml
+                        sh '''
+                            # Use sed to replace the image tag dynamically
+                            sed -i "s|image: manoj3003/pipelie-cicd:[^[:space:]]*|image: manoj3003/pipelie-cicd:${BUILD_NUMBER}|g" ${DEPLOYMENT_FILE_PATH}
+                        '''
+
+                        // Check for changes and commit if necessary
+                        sh '''
+                            if git diff --quiet; then
+                                echo "No changes detected in ${DEPLOYMENT_FILE_PATH}"
+                            else
+                                git add ${DEPLOYMENT_FILE_PATH}
+                                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                                git push -f https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:master
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}
