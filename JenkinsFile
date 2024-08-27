@@ -54,32 +54,17 @@ pipeline {
                 script {
                     // Connect to EC2 and run cleanup commands
                     sh '''
-                        # List all Docker images with their IDs
-                        docker images -q > all_images.txt
-
                         # Get the image ID of the current Docker image
                         CURRENT_IMAGE_ID=$(docker images -q ${DOCKER_IMAGE})
 
-                        # Loop through all images and delete those that are not the current one
-                        while read -r IMAGE_ID; do
+                        # List all Docker image IDs
+                        docker images -q | while read -r IMAGE_ID; do
                             if [ "$IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
-                                # List containers using the image
-                                CONTAINERS=$(docker ps -a -q --filter "ancestor=$IMAGE_ID")
-
-                                if [ -n "$CONTAINERS" ]; then
-                                    echo "Stopping and removing containers using image with ID: $IMAGE_ID"
-                                    # Stop and remove containers using the image
-                                    docker stop $CONTAINERS
-                                    docker rm $CONTAINERS
-                                fi
-
                                 echo "Removing old image with ID: $IMAGE_ID"
+                                # Try to remove the image
                                 docker rmi -f $IMAGE_ID || echo "Failed to remove image $IMAGE_ID - might be in use or other error."
                             fi
-                        done < all_images.txt
-
-                        # Clean up the temporary file
-                        rm all_images.txt
+                        done
                     '''
                 }
             }
@@ -122,7 +107,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             emailext (
