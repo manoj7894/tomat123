@@ -1,28 +1,31 @@
 pipeline {
     agent {
-        docker {
-            image 'abhishekf5/maven-abhishek-docker-agent:v1'
-            args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    docker {
+      image 'abhishekf5/maven-abhishek-docker-agent:v1'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
     }
+  }
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
-        DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"
+        DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
     }
+
     stages {
         stage('GetCode') {
             steps {
-                git branch: 'master', url: '(link unavailable)'
+                git branch: 'master', url: 'https://github.com/manoj7894/tomat123.git'
             }
         }
+
         stage('Build') {
             steps {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
+        
         stage('Login') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'Docker_id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -30,9 +33,10 @@ pipeline {
                 }
             }
         }
+        
         stage('Static Code Analysis') {
             environment {
-                SONAR_URL = "(link unavailable)"
+                SONAR_URL = "http://65.1.107.97:9000"
             }
             steps {
                 withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
@@ -40,14 +44,17 @@ pipeline {
                 }
             }
         }
+
+
         stage('Push') {
             steps {
                 script {
                     def dockerImage = docker.image(DOCKER_IMAGE)
-                    dockerImage.push()
+                    dockerImage.push() // Pushes the Docker image to the repository
                 }
             }
         }
+
         stage('Update Deployment File') {
             steps {
                 withCredentials([string(credentialsId: 'github_id', variable: 'GITHUB_TOKEN')]) {
@@ -57,14 +64,19 @@ pipeline {
                             git config user.email "manojvarmapotthuri3003@gmail.com"
                             git config user.name "Manojvarma Potthuri"
                         '''
+
                         // Check out the repository
                         sh 'git checkout master'
+
                         // Display the current content of the deployment file for debugging
                         sh 'cat ${DEPLOYMENT_FILE_PATH}'
+
                         // Update the image tag in deployment.yml
                         sh '''
+                            # Use sed to replace the image tag dynamically
                             sed -i "s|image: manoj3003/pipelie-cicd:[^[:space:]]*|image: manoj3003/pipelie-cicd:${BUILD_NUMBER}|g" ${DEPLOYMENT_FILE_PATH}
                         '''
+
                         // Check for changes and commit if necessary
                         sh '''
                             if git diff --quiet; then
@@ -72,31 +84,12 @@ pipeline {
                             else
                                 git add ${DEPLOYMENT_FILE_PATH}
                                 git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                                git push -f https://${GITHUB_TOKEN}@(link unavailable) HEAD:master
+                                git push -f https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:master
                             fi
                         '''
                     }
                 }
             }
-        }
-    }
-    post {
-        always {
-            emailText (
-                subject: "Pipeline Status: ${BUILD_NUMBER}",
-                body: '''<html>
-                            <body>
-                                <p>Build Status: ${BUILD_STATUS}</p>
-                                <p>Build Number: ${BUILD_NUMBER}</p>
-                                <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
-                            </body>
-                            </html>''',
-                to: 'manojvarmapotthutri@gmail.com',
-                from: 'jenkins@example.com',
-                replyTo: 'jenkins@example.com',
-                mimeType: 'text/html',
-                cc: 'varmapotthuri4@gmail.com'
-            )
         }
     }
 }
