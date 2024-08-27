@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
@@ -35,7 +36,10 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
-                    sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL'
+                    sh '''
+                        mkdir -p /var/lib/jenkins/workspace/email-01/target/sonar
+                        mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL
+                    '''
                 }
             }
         }
@@ -52,7 +56,6 @@ pipeline {
         stage('Cleanup Old Docker Images') {
             steps {
                 script {
-                    // Connect to EC2 and run cleanup commands
                     sh '''
                         # Get the image ID of the current Docker image
                         CURRENT_IMAGE_ID=$(docker images -q ${DOCKER_IMAGE})
