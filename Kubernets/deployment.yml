@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: my-container2
-        image: manoj3003/pipelie-cicd:20
+        image: manoj3003/pipelie-cicd:21
         ports:
         - containerPort: 80
