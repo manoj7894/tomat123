@@ -64,7 +64,7 @@ pipeline {
 
         stage('Static Code Analysis') {
             environment {
-                SONAR_URL = "http://65.1.107.97:9000"
+                SONAR_URL = "http://13.233.28.18:9000"
             }
             steps {
                 withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
@@ -133,7 +133,7 @@ pipeline {
                               <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
                            </body>
                         </html>''',
-                to: 'manojvarmapotthutri@gmail.com',
+                to: 'varmapotthuri4@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html'
