@@ -54,10 +54,11 @@ pipeline {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
-        stage('OWASP SCAN') {
-            steps{
-                dependencyCheck additionalArguments: '', odcInstallation: 'DP-Check'
-                        dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        stage ("Trivy image scan") {
+            steps {
+                script {
+                    sh "trivy image ${DOCKER_IMAGE} > trivy.txt"
+                }
             }
         }
 
