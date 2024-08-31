@@ -5,14 +5,14 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
-        OLD_IMAGE_TAG_PATTERN = "manoj3003/pipelie-cicd:*"  // Pattern to match old images
+        RELEASE = "1.0.0"
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
         DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
     }
 
     stages {
-        stage('Cleanup Old Docker Images') {
+        /*stage('Cleanup Old Docker Images') {
             steps {
                 script {
                     echo "Cleaning up old Docker images..."
@@ -40,7 +40,7 @@ pipeline {
                     }
                 }
             }
-        }
+        }*/
 
         stage('GetCode') {
             steps {
@@ -50,6 +50,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh "docker images --format '{{.Repository}}:{{.Tag}}' | grep ${DOCKER_IMAGE} | grep -v ${RELEASE}-${BUILD_NUMBER} | grep -v latest | xatgs -I {} docker rmi || true"
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
