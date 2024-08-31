@@ -5,7 +5,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('Docker_id')
         DOCKER_IMAGE = "manoj3003/pipelie-cicd:${BUILD_NUMBER}"
-        RELEASE = "1.0.0"
+        OLD_IMAGE_TAG_PATTERN = "manoj3003/pipelie-cicd:*"  // Pattern to match old images
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
         DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
@@ -50,7 +50,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean package'
-                docker images --format '{{.Repository}}:{{.Tag}}' | grep manoj3003/pipelie-cicd: | grep -v latest | xargs -I {} docker rmi {}
+                def oldImages = sh(script: "docker images --format '{{.Repository}}:{{.Tag}}' | grep '${OLD_IMAGE_TAG_PATTERN}'", returnStdout: true).trim()
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
