@@ -144,7 +144,7 @@ pipeline {
                 to: 'manojvarmapotthutri@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
-                attachmentsPattern: 'trivy.txt'
+                attachmentsPattern: 'trivy.txt',
                 mimeType: 'text/html'
         }
     }
