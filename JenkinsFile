@@ -132,7 +132,7 @@ pipeline {
 
     post {
         always {
-            emailext (
+            emailext attachLog: true,
                 subject: "Pipeline Status: ${BUILD_NUMBER}",
                 body: '''<html>
                            <body>
@@ -144,6 +144,7 @@ pipeline {
                 to: 'manojvarmapotthutri@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
+                attachmentsPattern: 'trivy.txt'
                 mimeType: 'text/html'
             )
         }
