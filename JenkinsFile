@@ -50,7 +50,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean package'
-                sh "docker images --format '{{.Repository}}:{{.Tag}}' | grep ${DOCKER_IMAGE} | grep -v ${RELEASE}-${BUILD_NUMBER} | grep -v latest | xatgs -I {} docker rmi || true"
+                docker images --format '{{.Repository}}:{{.Tag}}' | grep manoj3003/pipelie-cicd: | grep -v latest | xargs -I {} docker rmi {}
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
