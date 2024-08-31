@@ -146,7 +146,6 @@ pipeline {
                 replyTo: 'jenkins@example.com',
                 attachmentsPattern: 'trivy.txt'
                 mimeType: 'text/html'
-            )
         }
     }
 }
