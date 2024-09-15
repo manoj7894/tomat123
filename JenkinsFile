@@ -9,6 +9,7 @@ pipeline {
         GIT_REPO_NAME = "tomat123"
         GIT_USER_NAME = "manoj7894"
         DEPLOYMENT_FILE_PATH = "Kubernets/deployment.yml"  // Adjust the path if necessary
+        SCANNER_HOME = tool 'sonar-scanner'
     }
 
     stages {
@@ -76,15 +77,12 @@ pipeline {
             }
         }
 
-        stage('Static Code Analysis') {
-            environment {
-                SONAR_URL = "http://13.201.185.189:9000"
-            }
+        stage('SonarQube') {
             steps {
-                withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_AUTH_TOKEN')]) {
-                    sh '''
-                        mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=$SONAR_URL
-                    '''
+                withSonarQubeEnv('Sonar_Install') {
+                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Campground \
+                    -Dsonar.projectKey=Campground \
+                    -Dsonar.host.url=http://13.232.72.13:9000'''
                 }
             }
         }
