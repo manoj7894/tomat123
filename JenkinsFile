@@ -13,6 +13,7 @@ pipeline {
     }
 
     stages {
+        /*
         stage('Cleanup Old Docker Images') {
             steps {
                 script {
@@ -41,7 +42,7 @@ pipeline {
                     }
                 }
             }
-        }
+        } */
 
         stage('GetCode') {
             steps {
